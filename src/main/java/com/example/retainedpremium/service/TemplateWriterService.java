@@ -3,9 +3,7 @@ package com.example.retainedpremium.service;
 import com.example.retainedpremium.constant.InsuranceConstants;
 import com.example.retainedpremium.model.CompanyData;
 import com.example.retainedpremium.model.QuarterData;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
@@ -67,7 +65,7 @@ public class TemplateWriterService {
                             int col = colEntry.getValue();
                             double value = companyData.retainedPremiums().getOrDefault(colEntry.getKey(), 0.0);
                             Cell cell = row.getCell(col - 1, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-                            cell.setCellValue(value);
+                            setCellNumericValue(cell, value);
                         }
                     }
                 }
@@ -108,7 +106,7 @@ public class TemplateWriterService {
                         for (Map.Entry<Integer, Double> catEntry : aggregated.entrySet()) {
                             int col = catEntry.getKey(); // 1-based
                             Cell cell = row.getCell(col - 1, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-                            cell.setCellValue(catEntry.getValue());
+                            setCellNumericValue(cell, catEntry.getValue());
                         }
 
                         // Write U column (last year data)
@@ -116,7 +114,7 @@ public class TemplateWriterService {
                         if (lastYear != null) {
                             Cell uCell = row.getCell(InsuranceConstants.TEMPLATE_S2_LASTYEAR_COL - 1,
                                     Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-                            uCell.setCellValue(lastYear);
+                            setCellNumericValue(uCell, lastYear);
                         } else {
                             log.warn("公司代號 {} 無去年資料，U欄留空", code);
                         }
@@ -158,6 +156,16 @@ public class TemplateWriterService {
 
             log.info("Report written successfully to {}", outputPath);
         }
+    }
+
+    /**
+     * Sets a numeric value on a cell, removing any existing formula first.
+     */
+    private void setCellNumericValue(Cell cell, double value) {
+        if (cell.getCellType() == CellType.FORMULA) {
+            cell.removeFormula();
+        }
+        cell.setCellValue(value);
     }
 
     private Map<String, Integer> buildCompanyRowMap(XSSFSheet sheet, int dataStart, int dataEnd) {
