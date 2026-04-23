@@ -112,16 +112,16 @@ class TemplateWriterServiceTest {
             assertNotNull(s2Row, "Company 29 row should exist in Sheet2");
             assertFalse(s2Row.getZeroHeight(), "Company 29 row should be visible in Sheet2");
 
-            // Check aggregated category data in D-S (cols 4-19, 0-based 3-18)
-            boolean hasS2Data = false;
+            // Check Sheet2 D-S columns should preserve cross-sheet formulas (not overwritten)
+            boolean hasS2Formula = false;
             for (int col = 4; col <= 19; col++) {
                 Cell cell = s2Row.getCell(col - 1);
-                if (cell != null && cell.getCellType() == CellType.NUMERIC && cell.getNumericCellValue() != 0.0) {
-                    hasS2Data = true;
+                if (cell != null && cell.getCellType() == CellType.FORMULA) {
+                    hasS2Formula = true;
                     break;
                 }
             }
-            assertTrue(hasS2Data, "Company 29 should have non-zero category data in Sheet2");
+            assertTrue(hasS2Formula, "Company 29 Sheet2 D-S should preserve cross-sheet formulas");
 
             // Check U column (last year data)
             Cell uCell = s2Row.getCell(InsuranceConstants.TEMPLATE_S2_LASTYEAR_COL - 1);

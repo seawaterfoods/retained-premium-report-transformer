@@ -79,7 +79,9 @@ public class TemplateWriterService {
                 }
             }
 
-            // Write Sheet2 data and hide unused rows
+            // Sheet2: D~S columns contain cross-sheet formulas referencing Sheet1.
+            // Only write U column (last year data) and handle row hiding.
+            // D~S and T columns are all formulas — do NOT overwrite.
             for (Map.Entry<Integer, int[]> blockEntry : InsuranceConstants.S2_QUARTER_BLOCKS.entrySet()) {
                 int quarter = blockEntry.getKey();
                 int[] block = blockEntry.getValue();
@@ -101,15 +103,11 @@ public class TemplateWriterService {
                         companiesWithData.add(code);
                         Row row = sheet2.getRow(rowNum - 1);
 
-                        // Write aggregated categories (D-S, cols 4-19)
-                        Map<Integer, Double> aggregated = dataTransformerService.aggregateCategories(companyData);
-                        for (Map.Entry<Integer, Double> catEntry : aggregated.entrySet()) {
-                            int col = catEntry.getKey(); // 1-based
-                            Cell cell = row.getCell(col - 1, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-                            setCellNumericValue(cell, catEntry.getValue());
-                        }
+                        // D~S (cols 4-19): PRESERVE cross-sheet formulas — do NOT write
+                        // T (col 20): PRESERVE SUM formula — do NOT write
+                        // V (col 22): PRESERVE growth rate formula — do NOT write
 
-                        // Write U column (last year data)
+                        // Write U column (last year data) only
                         Double lastYear = lastYearData.get(code);
                         if (lastYear != null) {
                             Cell uCell = row.getCell(InsuranceConstants.TEMPLATE_S2_LASTYEAR_COL - 1,
