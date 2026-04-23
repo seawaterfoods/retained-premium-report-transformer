@@ -1,0 +1,11 @@
+app:
+  input-dir: ./input
+  output-dir: ./output
+  template-path: ./templates/template.xlsx
+  last-year-dir: ./lastyear
+
+logging:
+  level:
+    com.example.retainedpremium: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%level] %logger{36} - %msg%n"
