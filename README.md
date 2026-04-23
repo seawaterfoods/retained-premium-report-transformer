@@ -1,1 +1,47 @@
-# retained-premium-report-transformer
+# 自留保費統計表報表轉換系統
+
+> 將多個產險公司的「自留保費統計表」Excel 來源檔，自動彙整填入輸出模板，產生季度報表。
+
+**Java 17** · **Spring Boot 3.4.1** · **Apache POI 5.3.0** · **Gradle 8.12** · **Docker**
+
+## 📖 文件
+
+完整文件請參閱 [docs/README.md](docs/README.md)。
+
+## 🚀 快速開始
+
+```bash
+# 1. 建立目錄結構
+mkdir input output templates lastyear
+
+# 2. 放入模板
+cp docs/115年產險業務(Q1季自留)保費統計表.xlsx templates/template.xlsx
+
+# 3. 放入來源檔案
+cp docs/29_115(01-03)_自留保費統計表.xlsx input/
+
+# 4. 執行
+.\gradlew.bat bootRun
+
+# 5. 查看輸出
+ls output/
+```
+
+## 🐳 Docker
+
+```bash
+docker-compose build
+docker-compose up
+```
+
+## 功能摘要
+
+| 功能 | 說明 |
+|------|------|
+| 多檔案讀取 | 同時匯入多家公司的來源 Excel |
+| 自動險種歸類 | 33 種險種自動歸類為 16 大類 |
+| 季度判斷 | 依檔名自動判定季度 (Q1–Q4) |
+| 公式保留 | 輸出報表完整保留 Excel 公式 |
+| 動態公司顯示 | 僅顯示有資料的公司，隱藏空列 |
+| 去年同期比較 | 自動讀取去年報表填入對照欄 |
+| 容器化部署 | 支援 Docker 一鍵執行 |
