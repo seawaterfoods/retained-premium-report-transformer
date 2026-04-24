@@ -18,6 +18,7 @@ build.bat
 #    例如: import/115/Q1/29_115Q1_自留保費統計表.xlsx
 
 # 3. 設定：編輯 config/application.yml (設定 process-year)
+#    險種歸屬可透過 config/insurance-mapping.yml 調整
 
 # 4. 執行
 run.bat
@@ -37,6 +38,8 @@ docker-compose up
 
 ```
 ├── config/          外部設定檔 (使用者可修改)
+│   ├── application.yml       應用程式設定
+│   └── insurance-mapping.yml 險種歸屬對照設定
 ├── import/          來源資料 (按年度/季度分目錄)
 │   └── {year}/Q{quarter}/   例如 115/Q1/
 ├── output/          產出報表 (按年度/季度分目錄)
@@ -60,7 +63,7 @@ docker-compose up
 | 功能 | 說明 |
 |------|------|
 | 多檔案讀取 | 同時匯入多家公司的來源 Excel |
-| 自動險種歸類 | 33 種險種自動歸類為 16 大類 |
+| 自動險種歸類 | 33 種險種自動歸類為 16 大類（可透過 `config/insurance-mapping.yml` 調整） |
 | 季度判斷 | 依檔名自動判定季度 (Q1–Q4) |
 | 公式保留 | 輸出報表完整保留 Excel 公式 |
 | 動態公司顯示 | 僅顯示有資料的公司，隱藏空列 |

@@ -1,8 +1,8 @@
 package com.insurance.retainedpremium.writer;
 
-import com.insurance.retainedpremium.constant.InsuranceConstants;
-import com.insurance.retainedpremium.constant.InsuranceConstants.CategoryDef;
-import com.insurance.retainedpremium.constant.InsuranceConstants.GuishuEntry;
+import com.insurance.retainedpremium.config.InsuranceMappingService;
+import com.insurance.retainedpremium.config.InsuranceMappingService.CategoryDef;
+import com.insurance.retainedpremium.config.InsuranceMappingService.GuishuEntry;
 import com.insurance.retainedpremium.model.CompanyData;
 import com.insurance.retainedpremium.model.QuarterData;
 import com.insurance.retainedpremium.service.DataTransformerService;
@@ -32,9 +32,11 @@ public class ReportWriter {
     private static final Logger log = LoggerFactory.getLogger(ReportWriter.class);
 
     private final DataTransformerService dataTransformerService;
+    private final InsuranceMappingService mapping;
 
-    public ReportWriter(DataTransformerService dataTransformerService) {
+    public ReportWriter(DataTransformerService dataTransformerService, InsuranceMappingService mapping) {
         this.dataTransformerService = dataTransformerService;
+        this.mapping = mapping;
     }
 
     /**
@@ -118,10 +120,10 @@ public class ReportWriter {
         sheet.setColumnWidth(0, charWidth(4.22));   // A: 代號
         sheet.setColumnWidth(1, charWidth(10.78));  // B: 月份
         sheet.setColumnWidth(2, charWidth(13.89));  // C: 公司別
-        for (int c = S1_COL_DATA_START - 1; c <= S1_COL_DATA_END - 1; c++) {
+        for (int c = S1_COL_DATA_START - 1; c <= mapping.getS1ColDataEnd() - 1; c++) {
             sheet.setColumnWidth(c, charWidth(13.5));
         }
-        sheet.setColumnWidth(S1_COL_TOTAL - 1, charWidth(16.22)); // AK: 合計
+        sheet.setColumnWidth(mapping.getS1ColTotal() - 1, charWidth(16.22)); // 合計
 
         // --- Header Row 0: insurance codes ---
         Row row0 = sheet.createRow(S1_HEADER_ROW_CODES);
@@ -129,8 +131,8 @@ public class ReportWriter {
         createCell(row0, 0, (String) null, styles.getS1CodeValueStyle());
         createCell(row0, 1, (String) null, styles.getS1CodeValueBoldStyle());
         createCell(row0, 2, "險種代號", styles.getS1CodeHeaderStyle());
-        for (String code : INSURANCE_CODES) {
-            int col = S1_CODE_TO_COL.get(code) - 1;
+        for (String code : mapping.getInsuranceCodes()) {
+            int col = mapping.getS1CodeToCol().get(code) - 1;
             createCell(row0, col, code, styles.getS1CodeValueStyle());
         }
 
@@ -140,11 +142,11 @@ public class ReportWriter {
         createCell(row1, 0, "代號", styles.getS1LabelHeaderStyle());
         createCell(row1, 1, "月份", styles.getS1MonthHeaderStyle());
         createCell(row1, 2, "公司別/險種", styles.getS1CompanyNameHeaderStyle());
-        for (String code : INSURANCE_CODES) {
-            int col = S1_CODE_TO_COL.get(code) - 1;
-            createCell(row1, col, INSURANCE_CODE_NAMES.get(code), styles.getS1NameHeaderStyle());
+        for (String code : mapping.getInsuranceCodes()) {
+            int col = mapping.getS1CodeToCol().get(code) - 1;
+            createCell(row1, col, mapping.getCodeToShortName().get(code), styles.getS1NameHeaderStyle());
         }
-        createCell(row1, S1_COL_TOTAL - 1, "合計", styles.getS1NameHeaderStyle());
+        createCell(row1, mapping.getS1ColTotal() - 1, "合計", styles.getS1NameHeaderStyle());
 
         // --- Freeze panes (D2) ---
         sheet.createFreezePane(3, 1);
@@ -173,8 +175,8 @@ public class ReportWriter {
                 createCell(dataRow, 2, name, styles.getS1CompanyNameStyle());
 
                 // Insurance code values
-                for (String insCode : INSURANCE_CODES) {
-                    int col = S1_CODE_TO_COL.get(insCode) - 1;
+                for (String insCode : mapping.getInsuranceCodes()) {
+                    int col = mapping.getS1CodeToCol().get(insCode) - 1;
                     double value = 0.0;
                     if (cd != null) {
                         value = cd.retainedPremiums().getOrDefault(insCode, 0.0);
@@ -182,11 +184,11 @@ public class ReportWriter {
                     createCell(dataRow, col, value, styles.getS1DataStyle());
                 }
 
-                // AK: SUM formula
+                // Total SUM formula
                 String firstDataCol = colLetter(S1_COL_DATA_START - 1);
-                String lastDataCol = colLetter(S1_COL_DATA_END - 1);
+                String lastDataCol = colLetter(mapping.getS1ColDataEnd() - 1);
                 int excelRow = currentRow + 1;
-                createFormulaCell(dataRow, S1_COL_TOTAL - 1,
+                createFormulaCell(dataRow, mapping.getS1ColTotal() - 1,
                         "SUM(" + firstDataCol + excelRow + ":" + lastDataCol + excelRow + ")",
                         styles.getS1DataStyle());
 
@@ -208,7 +210,7 @@ public class ReportWriter {
             createCell(subtotalRow, 1, monthLabel, styles.getS1SubtotalMonthStyle());
             createCell(subtotalRow, 2, "小計", styles.getS1SubtotalLabelStyle());
 
-            for (int col = S1_COL_DATA_START - 1; col <= S1_COL_TOTAL - 1; col++) {
+            for (int col = S1_COL_DATA_START - 1; col <= mapping.getS1ColTotal() - 1; col++) {
                 String colL = colLetter(col);
                 String formula = "SUBTOTAL(9," + colL + (blockStart + 1) + ":" + colL + (blockEnd + 1) + ")";
                 createFormulaCell(subtotalRow, col, formula, styles.getS1SubtotalDataStyle());
@@ -220,7 +222,7 @@ public class ReportWriter {
         // Auto filter on header row
         if (currentRow > S1_DATA_START_ROW) {
             sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(
-                    S1_HEADER_ROW_NAMES, currentRow - 1, 0, S1_COL_TOTAL - 1));
+                    S1_HEADER_ROW_NAMES, currentRow - 1, 0, mapping.getS1ColTotal() - 1));
         }
 
         return quarterRowMap;
@@ -241,12 +243,12 @@ public class ReportWriter {
         sheet.setColumnWidth(0, charWidth(4.89));
         sheet.setColumnWidth(1, charWidth(12.89));
         sheet.setColumnWidth(2, charWidth(17.22));
-        for (int c = S2_COL_DATA_START - 1; c <= S2_COL_DATA_END - 1; c++) {
+        for (int c = S2_COL_DATA_START - 1; c <= mapping.getS2ColDataEnd() - 1; c++) {
             sheet.setColumnWidth(c, charWidth(17.56));
         }
-        sheet.setColumnWidth(S2_COL_YEAR_TOTAL - 1, charWidth(19.22));
-        sheet.setColumnWidth(S2_COL_LASTYEAR - 1, charWidth(13.0));
-        sheet.setColumnWidth(S2_COL_GROWTH - 1, charWidth(12.89));
+        sheet.setColumnWidth(mapping.getS2ColYearTotal() - 1, charWidth(19.22));
+        sheet.setColumnWidth(mapping.getS2ColLastYear() - 1, charWidth(13.0));
+        sheet.setColumnWidth(mapping.getS2ColGrowth() - 1, charWidth(12.89));
 
         // --- Row 0: Title ---
         int[] months = QUARTER_MONTH_MAP.get(maxQuarter);
@@ -255,27 +257,31 @@ public class ReportWriter {
         Row titleRow = sheet.createRow(S2_HEADER_ROW_TITLE);
         titleRow.setHeightInPoints(ExcelStyleHelper.S2_ROW0_HEIGHT);
         createCell(titleRow, 0, title, styles.getS2TitleStyle());
-        mergeRegion(sheet, 0, 0, 0, S2_COL_YEAR_TOTAL - 1);
+        mergeRegion(sheet, 0, 0, 0, mapping.getS2ColYearTotal() - 1);
 
         // --- Row 1: Unit ---
         Row unitRow = sheet.createRow(S2_HEADER_ROW_UNIT);
         unitRow.setHeightInPoints(ExcelStyleHelper.S2_ROW1_HEIGHT);
-        createCell(unitRow, S2_COL_GROWTH - 1, "單位:新台幣元", styles.getS2UnitStyle());
+        createCell(unitRow, mapping.getS2ColGrowth() - 1, "單位:新台幣元", styles.getS2UnitStyle());
 
         // --- Row 2: Category group headers ---
         Row groupRow = sheet.createRow(S2_HEADER_ROW_GROUP);
         groupRow.setHeightInPoints(ExcelStyleHelper.S2_ROW2_HEIGHT);
-        for (Map.Entry<String, int[]> entry : S2_CATEGORY_GROUPS.entrySet()) {
+        Map<String, int[]> catGroups = mapping.getS2CategoryGroups();
+        for (Map.Entry<String, int[]> entry : catGroups.entrySet()) {
+            String groupName = entry.getKey();
+            if ("比較".equals(groupName)) continue; // 比較放在最後
             int startCol = entry.getValue()[0] - 1;
             int endCol = entry.getValue()[1] - 1;
-            createCell(groupRow, startCol, entry.getKey(), styles.getS2GroupHeaderStyle());
-            mergeRegion(sheet, S2_HEADER_ROW_GROUP, S2_HEADER_ROW_GROUP, startCol, endCol);
-            // Fill empty merged cells with style
+            createCell(groupRow, startCol, groupName, styles.getS2GroupHeaderStyle());
+            if (startCol != endCol) {
+                mergeRegion(sheet, S2_HEADER_ROW_GROUP, S2_HEADER_ROW_GROUP, startCol, endCol);
+            }
             for (int c = startCol + 1; c <= endCol; c++) {
                 createCell(groupRow, c, "", styles.getS2GroupHeaderStyle());
             }
         }
-        createCell(groupRow, S2_COL_GROWTH - 1, "比較", styles.getS2GroupHeaderStyle());
+        createCell(groupRow, mapping.getS2ColGrowth() - 1, "比較", styles.getS2GroupHeaderStyle());
 
         // --- Row 3: Main headers ---
         Row mainRow = sheet.createRow(S2_HEADER_ROW_MAIN);
@@ -284,48 +290,51 @@ public class ReportWriter {
         createCell(mainRow, 1, "月份", styles.getS2HeaderCompanyStyle());
         createCell(mainRow, 2, "公司別/險種", styles.getS2HeaderCompanyStyle());
 
-        List<String> categoryNames = new ArrayList<>(CATEGORY_MAPPING.keySet());
+        Map<String, CategoryDef> catMapping = mapping.getCategoryMapping();
+        List<String> categoryNames = new ArrayList<>(catMapping.keySet());
         for (int i = 0; i < categoryNames.size(); i++) {
             String catName = categoryNames.get(i);
-            int col = S2_COL_DATA_START - 1 + i;
+            int col = catMapping.get(catName).columnIndex() - 1;
             createCell(mainRow, col, catName, styles.getS2MainHeaderStyle());
         }
-        createCell(mainRow, S2_COL_YEAR_TOTAL - 1, year + "年度", styles.getS2MainHeaderStyle());
-        createCell(mainRow, S2_COL_LASTYEAR - 1, (year - 1) + "年度", styles.getS2MainHeaderStyle());
-        createCell(mainRow, S2_COL_GROWTH - 1, "成長率", styles.getS2MainHeaderStyle());
+        createCell(mainRow, mapping.getS2ColYearTotal() - 1, year + "年度", styles.getS2MainHeaderStyle());
+        createCell(mainRow, mapping.getS2ColLastYear() - 1, (year - 1) + "年度", styles.getS2MainHeaderStyle());
+        createCell(mainRow, mapping.getS2ColGrowth() - 1, "成長率", styles.getS2MainHeaderStyle());
 
         // --- Row 4: Sub headers ---
         Row subRow = sheet.createRow(S2_HEADER_ROW_SUB);
         subRow.setHeightInPoints(ExcelStyleHelper.S2_ROW4_HEIGHT);
-        for (Map.Entry<Integer, String> entry : S2_SUB_HEADERS.entrySet()) {
+        Map<Integer, String> subHeaders = mapping.getS2SubHeaders();
+        for (Map.Entry<Integer, String> entry : subHeaders.entrySet()) {
             createCell(subRow, entry.getKey() - 1, entry.getValue(), styles.getS2SubHeaderStyle());
         }
-        createCell(subRow, S2_COL_YEAR_TOTAL - 1, "合計", styles.getS2SubHeaderStyle());
-        createCell(subRow, S2_COL_LASTYEAR - 1, "合計", styles.getS2SubHeaderStyle());
-        createCell(subRow, S2_COL_GROWTH - 1, "%", styles.getS2SubHeaderStyle());
+        createCell(subRow, mapping.getS2ColYearTotal() - 1, "合計", styles.getS2SubHeaderStyle());
+        createCell(subRow, mapping.getS2ColLastYear() - 1, "合計", styles.getS2SubHeaderStyle());
+        createCell(subRow, mapping.getS2ColGrowth() - 1, "%", styles.getS2SubHeaderStyle());
 
         // Fill empty sub-header cells with style for consistency
-        for (int c = 0; c < S2_COL_GROWTH; c++) {
+        for (int c = 0; c < mapping.getS2ColGrowth(); c++) {
             if (subRow.getCell(c) == null) {
                 createCell(subRow, c, "", styles.getS2SubHeaderStyle());
             }
         }
 
         // Merged cells for headers that span rows 3-4
-        // 代號, 月份, 公司別 span rows 3-4
         mergeRegion(sheet, S2_HEADER_ROW_MAIN, S2_HEADER_ROW_SUB, 0, 0);
         mergeRegion(sheet, S2_HEADER_ROW_MAIN, S2_HEADER_ROW_SUB, 1, 1);
         mergeRegion(sheet, S2_HEADER_ROW_MAIN, S2_HEADER_ROW_SUB, 2, 2);
         // Categories without sub-headers span rows 3-4
-        for (int i = 0; i < categoryNames.size(); i++) {
-            int col = S2_COL_DATA_START - 1 + i;
-            boolean hasSub = S2_SUB_HEADERS.containsKey(col + 1);
+        for (String catName : categoryNames) {
+            int col = catMapping.get(catName).columnIndex() - 1;
+            boolean hasSub = subHeaders.containsKey(col + 1);
             if (!hasSub) {
                 mergeRegion(sheet, S2_HEADER_ROW_MAIN, S2_HEADER_ROW_SUB, col, col);
             }
         }
-        // 強制責任險 (I) spans columns I-K in row 3 only
-        mergeRegion(sheet, S2_HEADER_ROW_MAIN, S2_HEADER_ROW_MAIN, 8, 10); // I4:K4
+        // Header group merges (e.g. 強制責任險)
+        for (int[] merge : mapping.getS2HeaderGroupMerges()) {
+            mergeRegion(sheet, S2_HEADER_ROW_MAIN, S2_HEADER_ROW_MAIN, merge[0] - 1, merge[1] - 1);
+        }
 
         // --- Freeze panes ---
         sheet.createFreezePane(3, S2_DATA_START_ROW);
@@ -335,7 +344,7 @@ public class ReportWriter {
         List<int[]> allQuarterBlocks = new ArrayList<>();
 
         // Category cross-sheet formula builder
-        List<CategoryDef> categories = new ArrayList<>(CATEGORY_MAPPING.values());
+        List<CategoryDef> categories = new ArrayList<>(catMapping.values());
 
         for (int q = 1; q <= 4; q++) {
             QuarterData qd = quarterDataMap.get(q);
@@ -367,16 +376,16 @@ public class ReportWriter {
                     List<String> codes = catDef.insuranceCodes();
 
                     if (codes.size() == 1) {
-                        int s1Col = S1_CODE_TO_COL.get(codes.get(0)) - 1;
+                        int s1Col = mapping.getS1CodeToCol().get(codes.get(0)) - 1;
                         String formula = quotedSheet1 + colLetter(s1Col) + s1ExcelRow;
                         createFormulaCell(dataRow, s2Col, formula, styles.getS2DataStyle());
                     } else {
                         // SUM of multiple columns
-                        String firstCol = colLetter(S1_CODE_TO_COL.get(codes.get(0)) - 1);
-                        String lastCol = colLetter(S1_CODE_TO_COL.get(codes.get(codes.size() - 1)) - 1);
+                        String firstCol = colLetter(mapping.getS1CodeToCol().get(codes.get(0)) - 1);
+                        String lastCol = colLetter(mapping.getS1CodeToCol().get(codes.get(codes.size() - 1)) - 1);
                         // Check if columns are contiguous
-                        int first = S1_CODE_TO_COL.get(codes.get(0));
-                        int last = S1_CODE_TO_COL.get(codes.get(codes.size() - 1));
+                        int first = mapping.getS1CodeToCol().get(codes.get(0));
+                        int last = mapping.getS1CodeToCol().get(codes.get(codes.size() - 1));
                         if (last - first + 1 == codes.size()) {
                             String formula = "SUM(" + quotedSheet1 + firstCol + s1ExcelRow
                                     + ":" + lastCol + s1ExcelRow + ")";
@@ -386,7 +395,7 @@ public class ReportWriter {
                             StringBuilder formula = new StringBuilder();
                             for (int i = 0; i < codes.size(); i++) {
                                 if (i > 0) formula.append("+");
-                                int col = S1_CODE_TO_COL.get(codes.get(i)) - 1;
+                                int col = mapping.getS1CodeToCol().get(codes.get(i)) - 1;
                                 formula.append(quotedSheet1).append(colLetter(col)).append(s1ExcelRow);
                             }
                             createFormulaCell(dataRow, s2Col, formula.toString(), styles.getS2DataStyle());
@@ -394,29 +403,29 @@ public class ReportWriter {
                     }
                 }
 
-                // T: Year total = SUM(D:S)
+                // T: Year total = SUM(D:last-cat)
                 int excelRow = currentRow + 1;
                 String dCol = colLetter(S2_COL_DATA_START - 1);
-                String sCol = colLetter(S2_COL_DATA_END - 1);
-                createFormulaCell(dataRow, S2_COL_YEAR_TOTAL - 1,
+                String sCol = colLetter(mapping.getS2ColDataEnd() - 1);
+                createFormulaCell(dataRow, mapping.getS2ColYearTotal() - 1,
                         "SUM(" + dCol + excelRow + ":" + sCol + excelRow + ")",
                         styles.getS2DataStyle());
 
                 // U: Last year data
                 Double lastYear = lastYearData != null ? lastYearData.get(code) : null;
                 if (lastYear != null) {
-                    createCell(dataRow, S2_COL_LASTYEAR - 1, lastYear, styles.getS2DataStyle());
+                    createCell(dataRow, mapping.getS2ColLastYear() - 1, lastYear, styles.getS2DataStyle());
                 } else {
-                    createCell(dataRow, S2_COL_LASTYEAR - 1, "", styles.getS2DataStyle());
+                    createCell(dataRow, mapping.getS2ColLastYear() - 1, "", styles.getS2DataStyle());
                     if (cd != null) {
                         log.warn("公司代號 {} 無去年資料，U欄留空", code);
                     }
                 }
 
                 // V: Growth rate = IF(U=0,"",((T/U)-1))
-                String uRef = colLetter(S2_COL_LASTYEAR - 1) + excelRow;
-                String tRef = colLetter(S2_COL_YEAR_TOTAL - 1) + excelRow;
-                createFormulaCell(dataRow, S2_COL_GROWTH - 1,
+                String uRef = colLetter(mapping.getS2ColLastYear() - 1) + excelRow;
+                String tRef = colLetter(mapping.getS2ColYearTotal() - 1) + excelRow;
+                createFormulaCell(dataRow, mapping.getS2ColGrowth() - 1,
                         "IF(" + uRef + "=0,\"\",(" + tRef + "/" + uRef + ")-1)",
                         styles.getS2PercentStyle());
 
@@ -441,22 +450,22 @@ public class ReportWriter {
             int excelBlockStart = blockStart + 1;
             int excelBlockEnd = blockEnd + 1;
 
-            for (int col = S2_COL_DATA_START - 1; col <= S2_COL_YEAR_TOTAL - 1; col++) {
+            for (int col = S2_COL_DATA_START - 1; col <= mapping.getS2ColYearTotal() - 1; col++) {
                 String colL = colLetter(col);
                 createFormulaCell(subtotalRow, col,
                         "SUBTOTAL(9," + colL + excelBlockStart + ":" + colL + excelBlockEnd + ")",
                         styles.getS2SubtotalDataStyle());
             }
             // U subtotal
-            String uColL = colLetter(S2_COL_LASTYEAR - 1);
-            createFormulaCell(subtotalRow, S2_COL_LASTYEAR - 1,
+            String uColL = colLetter(mapping.getS2ColLastYear() - 1);
+            createFormulaCell(subtotalRow, mapping.getS2ColLastYear() - 1,
                     "SUBTOTAL(9," + uColL + excelBlockStart + ":" + uColL + excelBlockEnd + ")",
                     styles.getS2SubtotalDataStyle());
             // V growth for subtotal: IF(U=0,"",((T-U)/U))
             int subtotalExcelRow = currentRow + 1;
-            String stU = colLetter(S2_COL_LASTYEAR - 1) + subtotalExcelRow;
-            String stT = colLetter(S2_COL_YEAR_TOTAL - 1) + subtotalExcelRow;
-            createFormulaCell(subtotalRow, S2_COL_GROWTH - 1,
+            String stU = colLetter(mapping.getS2ColLastYear() - 1) + subtotalExcelRow;
+            String stT = colLetter(mapping.getS2ColYearTotal() - 1) + subtotalExcelRow;
+            createFormulaCell(subtotalRow, mapping.getS2ColGrowth() - 1,
                     "IF(" + stU + "=0,\"\",(" + stT + "-" + stU + ")/" + stU + ")",
                     styles.getS2SubtotalPctStyle());
 
@@ -474,21 +483,21 @@ public class ReportWriter {
             int firstBlock = allQuarterBlocks.get(0)[0] + 1;
             int lastBlock = currentRow; // includes all subtotal rows
 
-            for (int col = S2_COL_DATA_START - 1; col <= S2_COL_YEAR_TOTAL - 1; col++) {
+            for (int col = S2_COL_DATA_START - 1; col <= mapping.getS2ColYearTotal() - 1; col++) {
                 String colL = colLetter(col);
                 createFormulaCell(grandTotalRow, col,
                         "SUBTOTAL(9," + colL + firstBlock + ":" + colL + lastBlock + ")",
                         styles.getS2SubtotalDataStyle());
             }
-            String uColL = colLetter(S2_COL_LASTYEAR - 1);
-            createFormulaCell(grandTotalRow, S2_COL_LASTYEAR - 1,
+            String uColL = colLetter(mapping.getS2ColLastYear() - 1);
+            createFormulaCell(grandTotalRow, mapping.getS2ColLastYear() - 1,
                     "SUBTOTAL(9," + uColL + firstBlock + ":" + uColL + lastBlock + ")",
                     styles.getS2SubtotalDataStyle());
 
             int gtExcelRow = currentRow + 1;
-            String gtU = colLetter(S2_COL_LASTYEAR - 1) + gtExcelRow;
-            String gtT = colLetter(S2_COL_YEAR_TOTAL - 1) + gtExcelRow;
-            createFormulaCell(grandTotalRow, S2_COL_GROWTH - 1,
+            String gtU = colLetter(mapping.getS2ColLastYear() - 1) + gtExcelRow;
+            String gtT = colLetter(mapping.getS2ColYearTotal() - 1) + gtExcelRow;
+            createFormulaCell(grandTotalRow, mapping.getS2ColGrowth() - 1,
                     "IF(" + gtT + "=0,\"\",(" + gtT + "/" + gtU + ")-1)",
                     styles.getS2SubtotalPctStyle());
         }
@@ -514,7 +523,7 @@ public class ReportWriter {
 
         // Data rows
         int rowIdx = 1;
-        for (GuishuEntry entry : GUISHU_TABLE) {
+        for (GuishuEntry entry : mapping.getGuishuTable()) {
             Row row = sheet.createRow(rowIdx++);
             if (entry.category() != null) {
                 createCell(row, 0, entry.category(), styles.getGuishuCategoryStyle());

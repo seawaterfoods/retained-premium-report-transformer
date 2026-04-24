@@ -1,5 +1,6 @@
 package com.insurance.retainedpremium.reader;
 
+import com.insurance.retainedpremium.config.InsuranceMappingService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
@@ -13,12 +14,16 @@ import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static com.insurance.retainedpremium.constant.InsuranceConstants.S2_COL_YEAR_TOTAL;
-
 @Component
 public class LastYearReader {
 
     private static final Logger log = LoggerFactory.getLogger(LastYearReader.class);
+
+    private final InsuranceMappingService mapping;
+
+    public LastYearReader(InsuranceMappingService mapping) {
+        this.mapping = mapping;
+    }
 
     /**
      * 讀取去年同期報表的 Sheet2 T 欄 (年度合計)。
@@ -42,7 +47,7 @@ public class LastYearReader {
             Sheet sheet = workbook.getSheetAt(1);
             FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
 
-            int tColIndex = S2_COL_YEAR_TOTAL - 1;
+            int tColIndex = mapping.getS2ColYearTotal() - 1;
 
             for (int rowNum = 0; rowNum <= sheet.getLastRowNum(); rowNum++) {
                 Row row = sheet.getRow(rowNum);

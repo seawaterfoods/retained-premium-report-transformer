@@ -1,6 +1,6 @@
 package com.insurance.retainedpremium.writer;
 
-import com.insurance.retainedpremium.constant.InsuranceConstants;
+import com.insurance.retainedpremium.config.InsuranceMappingService;
 import com.insurance.retainedpremium.model.CompanyData;
 import com.insurance.retainedpremium.model.QuarterData;
 import com.insurance.retainedpremium.reader.ExcelSourceReader;
@@ -8,9 +8,10 @@ import com.insurance.retainedpremium.service.DataTransformerService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.FileInputStream;
 import java.nio.file.Path;
@@ -20,20 +21,20 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
 class ReportWriterTest {
 
+    @Autowired
     private ReportWriter reportWriter;
+
+    @Autowired
     private ExcelSourceReader excelSourceReader;
+
+    @Autowired
+    private InsuranceMappingService mapping;
 
     @TempDir
     Path tempDir;
-
-    @BeforeEach
-    void setUp() {
-        DataTransformerService dataTransformerService = new DataTransformerService();
-        excelSourceReader = new ExcelSourceReader();
-        reportWriter = new ReportWriter(dataTransformerService);
-    }
 
     @Test
     void writeReport_shouldProduceValidOutput() throws Exception {
@@ -79,7 +80,7 @@ class ReportWriterTest {
             assertEquals("代號", headerRow1.getCell(0).getStringCellValue());
             assertEquals("月份", headerRow1.getCell(1).getStringCellValue());
             assertEquals("公司別/險種", headerRow1.getCell(2).getStringCellValue());
-            assertEquals("合計", headerRow1.getCell(36).getStringCellValue());
+            assertEquals("合計", headerRow1.getCell(mapping.getS1ColTotal() - 1).getStringCellValue());
 
             // Data row (row 2, 0-based) should have company 29
             Row dataRow = sheet1.getRow(2);
@@ -90,7 +91,7 @@ class ReportWriterTest {
 
             // Check that data values exist (non-zero for at least some codes)
             boolean hasData = false;
-            for (int col = 3; col <= 35; col++) {
+            for (int col = 3; col <= mapping.getS1ColDataEnd() - 1; col++) {
                 Cell cell = dataRow.getCell(col);
                 if (cell != null && cell.getCellType() == CellType.NUMERIC && cell.getNumericCellValue() != 0.0) {
                     hasData = true;
@@ -100,7 +101,7 @@ class ReportWriterTest {
             assertTrue(hasData, "Company 29 should have non-zero data in Sheet1");
 
             // AK column should have SUM formula
-            Cell totalCell = dataRow.getCell(36);
+            Cell totalCell = dataRow.getCell(mapping.getS1ColTotal() - 1);
             assertNotNull(totalCell);
             assertEquals(CellType.FORMULA, totalCell.getCellType());
             assertTrue(totalCell.getCellFormula().startsWith("SUM("));
@@ -122,8 +123,8 @@ class ReportWriterTest {
             assertTrue(title.contains("1-3月份"), "Title should contain month range");
 
             // Year headers
-            assertEquals("115年度", sheet2.getRow(3).getCell(19).getStringCellValue());
-            assertEquals("114年度", sheet2.getRow(3).getCell(20).getStringCellValue());
+            assertEquals("115年度", sheet2.getRow(3).getCell(mapping.getS2ColYearTotal() - 1).getStringCellValue());
+            assertEquals("114年度", sheet2.getRow(3).getCell(mapping.getS2ColLastYear() - 1).getStringCellValue());
 
             // Data row in Sheet2 (row 5, 0-based)
             Row s2DataRow = sheet2.getRow(5);
@@ -138,18 +139,18 @@ class ReportWriterTest {
                     "Should have cross-sheet formula referencing Sheet1");
 
             // T column: SUM formula
-            Cell s2T = s2DataRow.getCell(19);
+            Cell s2T = s2DataRow.getCell(mapping.getS2ColYearTotal() - 1);
             assertNotNull(s2T);
             assertEquals(CellType.FORMULA, s2T.getCellType());
 
             // U column: last year data
-            Cell s2U = s2DataRow.getCell(20);
+            Cell s2U = s2DataRow.getCell(mapping.getS2ColLastYear() - 1);
             assertNotNull(s2U);
             assertEquals(5000000.0, s2U.getNumericCellValue(), 0.01,
                     "U column should have last year data");
 
             // V column: growth formula
-            Cell s2V = s2DataRow.getCell(21);
+            Cell s2V = s2DataRow.getCell(mapping.getS2ColGrowth() - 1);
             assertNotNull(s2V);
             assertEquals(CellType.FORMULA, s2V.getCellType());
 
@@ -194,7 +195,7 @@ class ReportWriterTest {
             assertNotNull(dataRow);
 
             // U column should be empty (string "") when no last year data
-            Cell uCell = dataRow.getCell(20);
+            Cell uCell = dataRow.getCell(mapping.getS2ColLastYear() - 1);
             assertNotNull(uCell, "U column cell should exist");
         }
     }
@@ -228,8 +229,8 @@ class ReportWriterTest {
             String title = sheet2.getRow(0).getCell(0).getStringCellValue();
             assertTrue(title.startsWith("116年度第1季"), "Title should use year 116");
 
-            assertEquals("116年度", sheet2.getRow(3).getCell(19).getStringCellValue());
-            assertEquals("115年度", sheet2.getRow(3).getCell(20).getStringCellValue());
+            assertEquals("116年度", sheet2.getRow(3).getCell(mapping.getS2ColYearTotal() - 1).getStringCellValue());
+            assertEquals("115年度", sheet2.getRow(3).getCell(mapping.getS2ColLastYear() - 1).getStringCellValue());
         }
     }
 }

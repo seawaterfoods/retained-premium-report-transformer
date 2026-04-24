@@ -1,22 +1,20 @@
 package com.insurance.retainedpremium.reader;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.nio.file.Path;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
 class LastYearReaderTest {
 
+    @Autowired
     private LastYearReader lastYearReader;
-
-    @BeforeEach
-    void setUp() {
-        lastYearReader = new LastYearReader();
-    }
 
     @Test
     void readLastYearData_nonExistentDirectory_returnsEmptyMap() {

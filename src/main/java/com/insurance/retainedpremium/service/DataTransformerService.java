@@ -1,7 +1,7 @@
 package com.insurance.retainedpremium.service;
 
-import com.insurance.retainedpremium.constant.InsuranceConstants;
-import com.insurance.retainedpremium.constant.InsuranceConstants.CategoryDef;
+import com.insurance.retainedpremium.config.InsuranceMappingService;
+import com.insurance.retainedpremium.config.InsuranceMappingService.CategoryDef;
 import com.insurance.retainedpremium.model.CompanyData;
 import com.insurance.retainedpremium.model.FileInfo;
 import com.insurance.retainedpremium.model.QuarterData;
@@ -18,6 +18,12 @@ import java.util.Map;
 public class DataTransformerService {
 
     private static final Logger log = LoggerFactory.getLogger(DataTransformerService.class);
+
+    private final InsuranceMappingService mapping;
+
+    public DataTransformerService(InsuranceMappingService mapping) {
+        this.mapping = mapping;
+    }
 
     /**
      * companyDataMap key = filename (支援同一公司跨季度)
@@ -50,7 +56,7 @@ public class DataTransformerService {
     public Map<Integer, Double> aggregateCategories(CompanyData companyData) {
         Map<Integer, Double> result = new HashMap<>();
 
-        for (Map.Entry<String, CategoryDef> entry : InsuranceConstants.CATEGORY_MAPPING.entrySet()) {
+        for (Map.Entry<String, CategoryDef> entry : mapping.getCategoryMapping().entrySet()) {
             CategoryDef def = entry.getValue();
             double sum = 0.0;
             for (String code : def.insuranceCodes()) {

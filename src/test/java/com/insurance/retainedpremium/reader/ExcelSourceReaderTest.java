@@ -1,6 +1,6 @@
 package com.insurance.retainedpremium.reader;
 
-import com.insurance.retainedpremium.constant.InsuranceConstants;
+import com.insurance.retainedpremium.config.InsuranceMappingService;
 import com.insurance.retainedpremium.model.CompanyData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +17,9 @@ class ExcelSourceReaderTest {
 
     @Autowired
     private ExcelSourceReader excelSourceReader;
+
+    @Autowired
+    private InsuranceMappingService mapping;
 
     @Test
     void readSourceFile_shouldParseActualSampleFile() {
@@ -38,7 +41,7 @@ class ExcelSourceReaderTest {
         assertEquals(33, premiums.size(),
                 "Should have 33 insurance code entries, got: " + premiums.size());
 
-        for (String code : InsuranceConstants.INSURANCE_CODES) {
+        for (String code : mapping.getInsuranceCodes()) {
             assertTrue(premiums.containsKey(code),
                     "Missing insurance code: " + code);
             assertNotNull(premiums.get(code),

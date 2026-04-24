@@ -1,10 +1,13 @@
 package com.insurance.retainedpremium.service;
 
+import com.insurance.retainedpremium.config.InsuranceMappingService;
 import com.insurance.retainedpremium.model.CompanyData;
 import com.insurance.retainedpremium.model.FileInfo;
 import com.insurance.retainedpremium.model.QuarterData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,14 +15,11 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
 class DataTransformerServiceTest {
 
+    @Autowired
     private DataTransformerService service;
-
-    @BeforeEach
-    void setUp() {
-        service = new DataTransformerService();
-    }
 
     @Test
     void groupByQuarter_groupsFilesByQuarter() {

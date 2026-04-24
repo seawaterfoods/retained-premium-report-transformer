@@ -4,6 +4,8 @@ app:
   process-year: 115
 
 spring:
+  config:
+    import: optional:file:./config/insurance-mapping.yml
   main:
     banner-mode: off
     web-application-type: none

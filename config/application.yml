@@ -5,3 +5,7 @@ app:
 
   # 年份設定（民國年，處理哪一年的資料）
   process-year: 115
+
+spring:
+  config:
+    import: optional:file:./config/insurance-mapping.yml
