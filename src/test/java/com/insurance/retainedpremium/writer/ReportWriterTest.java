@@ -38,7 +38,7 @@ class ReportWriterTest {
     @Test
     void writeReport_shouldProduceValidOutput() throws Exception {
         // Arrange
-        String sourcePath = Path.of("src/test/resources/test-data/29_115Q1__自留保費統計表.xlsx")
+        String sourcePath = Path.of("src/test/resources/test-data/29_115Q1_自留保費統計表.xlsx")
                 .toAbsolutePath().toString();
         Optional<CompanyData> result = excelSourceReader.readSourceFile(sourcePath);
         assertTrue(result.isPresent(), "Should read sample source file");
@@ -170,7 +170,7 @@ class ReportWriterTest {
 
     @Test
     void writeReport_withNoLastYearData_shouldLeaveUColumnEmpty() throws Exception {
-        String sourcePath = Path.of("src/test/resources/test-data/29_115Q1__自留保費統計表.xlsx")
+        String sourcePath = Path.of("src/test/resources/test-data/29_115Q1_自留保費統計表.xlsx")
                 .toAbsolutePath().toString();
         Optional<CompanyData> result = excelSourceReader.readSourceFile(sourcePath);
         assertTrue(result.isPresent());
@@ -201,7 +201,7 @@ class ReportWriterTest {
 
     @Test
     void writeReport_withDifferentYear_shouldUpdateSheetNamesAndTitle() throws Exception {
-        String sourcePath = Path.of("src/test/resources/test-data/29_115Q1__自留保費統計表.xlsx")
+        String sourcePath = Path.of("src/test/resources/test-data/29_115Q1_自留保費統計表.xlsx")
                 .toAbsolutePath().toString();
         Optional<CompanyData> result = excelSourceReader.readSourceFile(sourcePath);
         assertTrue(result.isPresent());

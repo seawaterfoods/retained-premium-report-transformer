@@ -17,7 +17,7 @@ public class FilenameParser {
     private static final Logger log = LoggerFactory.getLogger(FilenameParser.class);
 
     private static final Pattern FILENAME_PATTERN = Pattern.compile(
-            "^(\\d{1,2})_(\\d{2,3})Q(\\d)__自留保費統計表\\.xlsx$"
+            "^(\\d{1,2})_(\\d{2,3})Q(\\d)_自留保費統計表\\.xlsx$"
     );
 
     private static final Set<Integer> VALID_QUARTERS = Set.of(1, 2, 3, 4);

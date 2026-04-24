@@ -20,7 +20,7 @@ class ExcelSourceReaderTest {
 
     @Test
     void readSourceFile_shouldParseActualSampleFile() {
-        String filePath = Path.of("src/test/resources/test-data/29_115Q1__自留保費統計表.xlsx")
+        String filePath = Path.of("src/test/resources/test-data/29_115Q1_自留保費統計表.xlsx")
                 .toAbsolutePath().toString();
 
         Optional<CompanyData> result = excelSourceReader.readSourceFile(filePath);

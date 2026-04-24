@@ -19,7 +19,7 @@ class FilenameParserTest {
 
     @Test
     void shouldParseValidQ1Filename() {
-        Optional<FileInfo> result = parser.parse("29_115Q1__自留保費統計表.xlsx");
+        Optional<FileInfo> result = parser.parse("29_115Q1_自留保費統計表.xlsx");
 
         assertTrue(result.isPresent());
         FileInfo info = result.get();
@@ -28,12 +28,12 @@ class FilenameParserTest {
         assertEquals(1, info.startMonth());
         assertEquals(3, info.endMonth());
         assertEquals(1, info.quarter());
-        assertEquals("29_115Q1__自留保費統計表.xlsx", info.filename());
+        assertEquals("29_115Q1_自留保費統計表.xlsx", info.filename());
     }
 
     @Test
     void shouldParseValidQ2Filename() {
-        Optional<FileInfo> result = parser.parse("05_115Q2__自留保費統計表.xlsx");
+        Optional<FileInfo> result = parser.parse("05_115Q2_自留保費統計表.xlsx");
 
         assertTrue(result.isPresent());
         FileInfo info = result.get();
@@ -46,7 +46,7 @@ class FilenameParserTest {
 
     @Test
     void shouldParseValidQ4Filename() {
-        Optional<FileInfo> result = parser.parse("01_115Q4__自留保費統計表.xlsx");
+        Optional<FileInfo> result = parser.parse("01_115Q4_自留保費統計表.xlsx");
 
         assertTrue(result.isPresent());
         FileInfo info = result.get();
@@ -59,7 +59,7 @@ class FilenameParserTest {
 
     @Test
     void shouldRejectWrongExtension() {
-        Optional<FileInfo> result = parser.parse("29_115Q1__自留保費統計表.xls");
+        Optional<FileInfo> result = parser.parse("29_115Q1_自留保費統計表.xls");
         assertTrue(result.isEmpty());
     }
 
@@ -71,7 +71,7 @@ class FilenameParserTest {
 
     @Test
     void shouldRejectInvalidQuarter() {
-        Optional<FileInfo> result = parser.parse("29_115Q5__自留保費統計表.xlsx");
+        Optional<FileInfo> result = parser.parse("29_115Q5_自留保費統計表.xlsx");
         assertTrue(result.isEmpty());
     }
 
@@ -83,13 +83,13 @@ class FilenameParserTest {
 
     @Test
     void shouldParseFilenameFromFullPath() {
-        Optional<FileInfo> result = parser.parse("D:\\import\\29_115Q1__自留保費統計表.xlsx");
+        Optional<FileInfo> result = parser.parse("D:\\import\\29_115Q1_自留保費統計表.xlsx");
 
         assertTrue(result.isPresent());
         FileInfo info = result.get();
         assertEquals("29", info.companyCode());
         assertEquals(115, info.year());
         assertEquals(1, info.quarter());
-        assertEquals("29_115Q1__自留保費統計表.xlsx", info.filename());
+        assertEquals("29_115Q1_自留保費統計表.xlsx", info.filename());
     }
 }
