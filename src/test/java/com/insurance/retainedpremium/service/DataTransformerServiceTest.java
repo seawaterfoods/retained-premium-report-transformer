@@ -32,9 +32,9 @@ class DataTransformerServiceTest {
         CompanyData cdB01 = new CompanyData("B01", "Company B01", Map.of());
 
         Map<String, CompanyData> companyDataMap = Map.of(
-                "A01", cdA01,
-                "A02", cdA02,
-                "B01", cdB01
+                "A01_113_Q1.xlsx", cdA01,
+                "A02_113_Q1.xlsx", cdA02,
+                "B01_113_Q2.xlsx", cdB01
         );
 
         Map<Integer, QuarterData> result = service.groupByQuarter(List.of(f1, f2, f3), companyDataMap);
@@ -62,7 +62,7 @@ class DataTransformerServiceTest {
 
         CompanyData cdA01 = new CompanyData("A01", "Company A01", Map.of());
 
-        Map<String, CompanyData> companyDataMap = Map.of("A01", cdA01);
+        Map<String, CompanyData> companyDataMap = Map.of("A01_113_Q1.xlsx", cdA01);
 
         Map<Integer, QuarterData> result = service.groupByQuarter(List.of(f1, f2), companyDataMap);
 

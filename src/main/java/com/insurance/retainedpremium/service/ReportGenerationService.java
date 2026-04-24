@@ -101,7 +101,7 @@ public class ReportGenerationService implements CommandLineRunner {
 
         // STEP 4: Read all source files
         log.info("讀取來源檔案...");
-        Map<String, CompanyData> companyDataMap = new LinkedHashMap<>();
+        Map<String, CompanyData> companyDataMap = new LinkedHashMap<>(); // key=filename
         boolean hasReadError = false;
         for (FileInfo fi : fileInfos) {
             File sourceFile = allFiles.stream()
@@ -114,7 +114,7 @@ public class ReportGenerationService implements CommandLineRunner {
             }
             Optional<CompanyData> data = excelReader.readSourceFile(sourceFile.getAbsolutePath());
             if (data.isPresent()) {
-                companyDataMap.put(fi.companyCode(), data.get());
+                companyDataMap.put(fi.filename(), data.get());
                 log.info("  已讀取: {} ({})", fi.companyCode(), data.get().companyName());
             } else {
                 log.error("讀取失敗: {}", fi.filename());
@@ -144,9 +144,9 @@ public class ReportGenerationService implements CommandLineRunner {
         int maxQuarter = quarterDataMap.keySet().stream().mapToInt(Integer::intValue).max().orElse(1);
         log.info("年度={}, 最大季度=Q{}, 涵蓋季度={}", year, maxQuarter, quarterDataMap.keySet());
 
-        // STEP 7: 讀取去年同期資料 (from output/{year-1}/)
+        // STEP 7: 讀取去年同期資料 (from output/{year-1}/Q{quarter}/)
         log.info("讀取去年同期資料...");
-        String lastYearOutputDir = Paths.get(outputDir, String.valueOf(year - 1)).toString();
+        String lastYearOutputDir = Paths.get(outputDir, String.valueOf(year - 1), "Q" + maxQuarter).toString();
         Map<String, Double> lastYearData = lastYearReader.readLastYearData(year, maxQuarter, lastYearOutputDir);
         if (lastYearData.isEmpty()) {
             log.warn("無去年同期資料，U欄將留空");
@@ -154,8 +154,8 @@ public class ReportGenerationService implements CommandLineRunner {
             log.info("已讀取去年資料，共 {} 家公司", lastYearData.size());
         }
 
-        // STEP 8: Generate output path: output/{year}/
-        Path outputSubDir = Paths.get(outputDir, String.valueOf(year));
+        // STEP 8: Generate output path: output/{year}/Q{quarter}/
+        Path outputSubDir = Paths.get(outputDir, String.valueOf(year), "Q" + maxQuarter);
         String outputFilename = String.format("%d年產險業務(Q%d季自留)保費統計表.xlsx", year, maxQuarter);
         Path outputPath = outputSubDir.resolve(outputFilename);
 
