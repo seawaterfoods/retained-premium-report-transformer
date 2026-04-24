@@ -17,10 +17,10 @@ public class FilenameParser {
     private static final Logger log = LoggerFactory.getLogger(FilenameParser.class);
 
     private static final Pattern FILENAME_PATTERN = Pattern.compile(
-            "^(\\d{1,2})_(\\d{2,3})\\((\\d{2})-(\\d{2})\\)_自留保費統計表\\.xlsx$"
+            "^(\\d{1,2})_(\\d{2,3})Q(\\d)__自留保費統計表\\.xlsx$"
     );
 
-    private static final Set<Integer> VALID_END_MONTHS = Set.of(3, 6, 9, 12);
+    private static final Set<Integer> VALID_QUARTERS = Set.of(1, 2, 3, 4);
 
     public Optional<FileInfo> parse(String filepath) {
         String filename = Path.of(filepath).getFileName().toString();
@@ -33,30 +33,15 @@ public class FilenameParser {
 
         String companyCode = matcher.group(1);
         int year = Integer.parseInt(matcher.group(2));
-        int startMonth = Integer.parseInt(matcher.group(3));
-        int endMonth = Integer.parseInt(matcher.group(4));
+        int quarter = Integer.parseInt(matcher.group(3));
 
-        if (startMonth < 1 || startMonth > 12 || endMonth < 1 || endMonth > 12) {
-            log.error("Invalid month values in filename: {} (startMonth={}, endMonth={})", filename, startMonth, endMonth);
+        if (!VALID_QUARTERS.contains(quarter)) {
+            log.error("Invalid quarter value in filename: {} (quarter={})", filename, quarter);
             return Optional.empty();
         }
 
-        if (startMonth > endMonth) {
-            log.error("startMonth ({}) is greater than endMonth ({}) in filename: {}", startMonth, endMonth, filename);
-            return Optional.empty();
-        }
-
-        if (startMonth != 1) {
-            log.error("startMonth must be 01 for cumulative system, got {} in filename: {}", String.format("%02d", startMonth), filename);
-            return Optional.empty();
-        }
-
-        if (!VALID_END_MONTHS.contains(endMonth)) {
-            log.error("endMonth {} does not correspond to a valid quarter in filename: {}", String.format("%02d", endMonth), filename);
-            return Optional.empty();
-        }
-
-        int quarter = endMonth / 3;
+        int startMonth = 1;
+        int endMonth = quarter * 3;
 
         return Optional.of(new FileInfo(companyCode, year, startMonth, endMonth, quarter, filename));
     }
