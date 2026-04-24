@@ -125,25 +125,29 @@ public class ReportWriter {
 
         // --- Header Row 0: insurance codes ---
         Row row0 = sheet.createRow(S1_HEADER_ROW_CODES);
+        row0.setHeightInPoints(ExcelStyleHelper.S1_ROW0_HEIGHT);
+        createCell(row0, 0, (String) null, styles.getS1CodeValueStyle());
+        createCell(row0, 1, (String) null, styles.getS1CodeValueBoldStyle());
         createCell(row0, 2, "險種代號", styles.getS1CodeHeaderStyle());
         for (String code : INSURANCE_CODES) {
             int col = S1_CODE_TO_COL.get(code) - 1;
-            createCell(row0, col, code, styles.getS1CodeHeaderStyle());
+            createCell(row0, col, code, styles.getS1CodeValueStyle());
         }
 
         // --- Header Row 1: insurance names + labels ---
         Row row1 = sheet.createRow(S1_HEADER_ROW_NAMES);
+        row1.setHeightInPoints(ExcelStyleHelper.S1_ROW1_HEIGHT);
         createCell(row1, 0, "代號", styles.getS1LabelHeaderStyle());
-        createCell(row1, 1, "月份", styles.getS1LabelHeaderStyle());
-        createCell(row1, 2, "公司別/險種", styles.getS1LabelHeaderStyle());
+        createCell(row1, 1, "月份", styles.getS1MonthHeaderStyle());
+        createCell(row1, 2, "公司別/險種", styles.getS1CompanyNameHeaderStyle());
         for (String code : INSURANCE_CODES) {
             int col = S1_CODE_TO_COL.get(code) - 1;
             createCell(row1, col, INSURANCE_CODE_NAMES.get(code), styles.getS1NameHeaderStyle());
         }
         createCell(row1, S1_COL_TOTAL - 1, "合計", styles.getS1NameHeaderStyle());
 
-        // --- Freeze panes ---
-        sheet.createFreezePane(3, 2);
+        // --- Freeze panes (D2) ---
+        sheet.createFreezePane(3, 1);
 
         // --- Quarter blocks ---
         Map<Integer, int[]> quarterRowMap = new LinkedHashMap<>();
@@ -163,6 +167,7 @@ public class ReportWriter {
                 CompanyData cd = qd.companies().get(code);
 
                 Row dataRow = sheet.createRow(currentRow);
+                dataRow.setHeightInPoints(ExcelStyleHelper.S1_DATA_ROW_HEIGHT);
                 createCell(dataRow, 0, code, styles.getS1CompanyCodeStyle());
                 createCell(dataRow, 1, monthLabel, styles.getS1MonthStyle());
                 createCell(dataRow, 2, name, styles.getS1CompanyNameStyle());
@@ -198,7 +203,9 @@ public class ReportWriter {
 
             // Subtotal row
             Row subtotalRow = sheet.createRow(currentRow);
-            createCell(subtotalRow, 1, monthLabel, styles.getS1MonthStyle());
+            subtotalRow.setHeightInPoints(ExcelStyleHelper.S1_DATA_ROW_HEIGHT);
+            createCell(subtotalRow, 0, "", styles.getS1SubtotalCodeStyle());
+            createCell(subtotalRow, 1, monthLabel, styles.getS1SubtotalMonthStyle());
             createCell(subtotalRow, 2, "小計", styles.getS1SubtotalLabelStyle());
 
             for (int col = S1_COL_DATA_START - 1; col <= S1_COL_TOTAL - 1; col++) {
@@ -246,15 +253,18 @@ public class ReportWriter {
         String title = year + "年度第" + maxQuarter + "季(" + months[0] + "-" + months[1]
                 + "月份)各保險公司自留保費統計總表";
         Row titleRow = sheet.createRow(S2_HEADER_ROW_TITLE);
+        titleRow.setHeightInPoints(ExcelStyleHelper.S2_ROW0_HEIGHT);
         createCell(titleRow, 0, title, styles.getS2TitleStyle());
         mergeRegion(sheet, 0, 0, 0, S2_COL_YEAR_TOTAL - 1);
 
         // --- Row 1: Unit ---
         Row unitRow = sheet.createRow(S2_HEADER_ROW_UNIT);
+        unitRow.setHeightInPoints(ExcelStyleHelper.S2_ROW1_HEIGHT);
         createCell(unitRow, S2_COL_GROWTH - 1, "單位:新台幣元", styles.getS2UnitStyle());
 
         // --- Row 2: Category group headers ---
         Row groupRow = sheet.createRow(S2_HEADER_ROW_GROUP);
+        groupRow.setHeightInPoints(ExcelStyleHelper.S2_ROW2_HEIGHT);
         for (Map.Entry<String, int[]> entry : S2_CATEGORY_GROUPS.entrySet()) {
             int startCol = entry.getValue()[0] - 1;
             int endCol = entry.getValue()[1] - 1;
@@ -269,9 +279,10 @@ public class ReportWriter {
 
         // --- Row 3: Main headers ---
         Row mainRow = sheet.createRow(S2_HEADER_ROW_MAIN);
-        createCell(mainRow, 0, "代號", styles.getS2MainHeaderStyle());
-        createCell(mainRow, 1, "月份", styles.getS2MainHeaderStyle());
-        createCell(mainRow, 2, "公司別/險種", styles.getS2MainHeaderStyle());
+        mainRow.setHeightInPoints(ExcelStyleHelper.S2_ROW3_HEIGHT);
+        createCell(mainRow, 0, "代號", styles.getS2HeaderCodeStyle());
+        createCell(mainRow, 1, "月份", styles.getS2HeaderCompanyStyle());
+        createCell(mainRow, 2, "公司別/險種", styles.getS2HeaderCompanyStyle());
 
         List<String> categoryNames = new ArrayList<>(CATEGORY_MAPPING.keySet());
         for (int i = 0; i < categoryNames.size(); i++) {
@@ -285,6 +296,7 @@ public class ReportWriter {
 
         // --- Row 4: Sub headers ---
         Row subRow = sheet.createRow(S2_HEADER_ROW_SUB);
+        subRow.setHeightInPoints(ExcelStyleHelper.S2_ROW4_HEIGHT);
         for (Map.Entry<Integer, String> entry : S2_SUB_HEADERS.entrySet()) {
             createCell(subRow, entry.getKey() - 1, entry.getValue(), styles.getS2SubHeaderStyle());
         }
@@ -340,9 +352,10 @@ public class ReportWriter {
                 CompanyData cd = qd.companies().get(code);
 
                 Row dataRow = sheet.createRow(currentRow);
-                createCell(dataRow, 0, code, styles.getS2LabelStyle());
-                createCell(dataRow, 1, monthLabel, styles.getS2LabelStyle());
-                createCell(dataRow, 2, name, styles.getS2LabelStyle());
+                dataRow.setHeightInPoints(ExcelStyleHelper.S2_DATA_ROW_HEIGHT);
+                createCell(dataRow, 0, code, styles.getS2CompanyCodeStyle());
+                createCell(dataRow, 1, monthLabel, styles.getS2MonthStyle());
+                createCell(dataRow, 2, name, styles.getS2CompanyNameStyle());
 
                 // Cross-sheet formulas for categories (D-S)
                 int s1DataRow = s1Block[0] + ci; // 0-based row in Sheet1
@@ -400,11 +413,11 @@ public class ReportWriter {
                     }
                 }
 
-                // V: Growth rate = IF(U=0,"",((T-U)/U))
+                // V: Growth rate = IF(U=0,"",((T/U)-1))
                 String uRef = colLetter(S2_COL_LASTYEAR - 1) + excelRow;
                 String tRef = colLetter(S2_COL_YEAR_TOTAL - 1) + excelRow;
                 createFormulaCell(dataRow, S2_COL_GROWTH - 1,
-                        "IF(" + uRef + "=0,\"\",(" + tRef + "-" + uRef + ")/" + uRef + ")",
+                        "IF(" + uRef + "=0,\"\",(" + tRef + "/" + uRef + ")-1)",
                         styles.getS2PercentStyle());
 
                 // Hide row if no data
@@ -420,7 +433,9 @@ public class ReportWriter {
 
             // Subtotal row
             Row subtotalRow = sheet.createRow(currentRow);
-            createCell(subtotalRow, 1, monthLabel, styles.getS2SubtotalLabelStyle());
+            subtotalRow.setHeightInPoints(ExcelStyleHelper.S2_DATA_ROW_HEIGHT);
+            createCell(subtotalRow, 0, "", styles.getS2SubtotalCodeStyle());
+            createCell(subtotalRow, 1, monthLabel, styles.getS2SubtotalMonthStyle());
             createCell(subtotalRow, 2, "小計", styles.getS2SubtotalLabelStyle());
 
             int excelBlockStart = blockStart + 1;
@@ -437,7 +452,7 @@ public class ReportWriter {
             createFormulaCell(subtotalRow, S2_COL_LASTYEAR - 1,
                     "SUBTOTAL(9," + uColL + excelBlockStart + ":" + uColL + excelBlockEnd + ")",
                     styles.getS2SubtotalDataStyle());
-            // V growth for subtotal
+            // V growth for subtotal: IF(U=0,"",((T-U)/U))
             int subtotalExcelRow = currentRow + 1;
             String stU = colLetter(S2_COL_LASTYEAR - 1) + subtotalExcelRow;
             String stT = colLetter(S2_COL_YEAR_TOTAL - 1) + subtotalExcelRow;
@@ -451,7 +466,10 @@ public class ReportWriter {
         // Grand total row
         if (!allQuarterBlocks.isEmpty()) {
             Row grandTotalRow = sheet.createRow(currentRow);
-            createCell(grandTotalRow, 1, "總計", styles.getS2SubtotalLabelStyle());
+            grandTotalRow.setHeightInPoints(ExcelStyleHelper.S2_DATA_ROW_HEIGHT);
+            createCell(grandTotalRow, 0, "", styles.getS2SubtotalCodeStyle());
+            createCell(grandTotalRow, 1, "總計", styles.getS2SubtotalMonthStyle());
+            createCell(grandTotalRow, 2, "", styles.getS2SubtotalLabelStyle());
 
             int firstBlock = allQuarterBlocks.get(0)[0] + 1;
             int lastBlock = currentRow; // includes all subtotal rows
@@ -502,7 +520,7 @@ public class ReportWriter {
                 createCell(row, 0, entry.category(), styles.getGuishuCategoryStyle());
             }
             if (entry.group() != null) {
-                createCell(row, 1, entry.group(), styles.getGuishuCategoryStyle());
+                createCell(row, 1, entry.group(), styles.getGuishuDataStyle());
             }
             createCell(row, 2, entry.code(), styles.getGuishuCodeStyle());
             createCell(row, 4, entry.name(), styles.getGuishuDataStyle());

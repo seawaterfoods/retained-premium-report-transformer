@@ -3,5 +3,5 @@ app:
   import-dir: ./import
   output-dir: ./output
 
-  # 去年報表目錄
-  last-year-dir: ./import/lastyear
+  # 年份設定（民國年，處理哪一年的資料）
+  process-year: 115

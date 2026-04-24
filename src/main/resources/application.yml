@@ -1,7 +1,7 @@
 app:
   import-dir: ./import
   output-dir: ./output
-  last-year-dir: ./import/lastyear
+  process-year: 115
 
 spring:
   main:

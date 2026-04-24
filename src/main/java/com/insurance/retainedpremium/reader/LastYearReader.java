@@ -22,11 +22,12 @@ public class LastYearReader {
 
     /**
      * 讀取去年同期報表的 Sheet2 T 欄 (年度合計)。
+     * 從 lastYearOutputDir 目錄中尋找去年報表。
      * 動態掃描所有列，以 A 欄公司代號 (純數字) 識別資料列。
      */
-    public Map<String, Double> readLastYearData(int currentYear, int quarter, String lastYearDir) {
+    public Map<String, Double> readLastYearData(int currentYear, int quarter, String lastYearOutputDir) {
         String filename = (currentYear - 1) + "年產險業務(Q" + quarter + "季自留)保費統計表.xlsx";
-        Path filePath = Paths.get(lastYearDir, filename);
+        Path filePath = Paths.get(lastYearOutputDir, filename);
 
         if (!Files.exists(filePath)) {
             log.warn("去年報表不存在: {}, U欄將留空", filename);

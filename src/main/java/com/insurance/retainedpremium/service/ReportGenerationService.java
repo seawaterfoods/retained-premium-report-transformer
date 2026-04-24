@@ -13,6 +13,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -50,7 +51,7 @@ public class ReportGenerationService implements CommandLineRunner {
         log.info("===== 自留保費統計表報表轉換系統 =====");
         log.info("匯入目錄: {}", appConfig.getImportDir());
         log.info("輸出目錄: {}", appConfig.getOutputDir());
-        log.info("去年目錄: {}", appConfig.getLastYearDir());
+        log.info("處理年度: {}", appConfig.getProcessYear());
 
         execute();
     }
@@ -58,21 +59,24 @@ public class ReportGenerationService implements CommandLineRunner {
     public void execute() {
         String importDir = appConfig.getImportDir();
         String outputDir = appConfig.getOutputDir();
-        String lastYearDir = appConfig.getLastYearDir();
+        int year = appConfig.getProcessYear();
 
-        // STEP 1: Scan import directory for .xlsx files
-        log.info("掃描匯入目錄: {}", importDir);
-        List<File> xlsxFiles = scanImportFiles(importDir);
-        if (xlsxFiles.isEmpty()) {
-            log.error("匯入目錄中沒有找到 .xlsx 檔案: {}", importDir);
+        // STEP 1: 掃描 import/{year}/Q{quarter}/ 目錄中的 .xlsx 檔案
+        log.info("掃描匯入目錄: {}/{}/", importDir, year);
+        Map<Integer, List<File>> quarterFiles = scanQuarterFiles(importDir, year);
+        if (quarterFiles.isEmpty()) {
+            log.error("匯入目錄中沒有找到任何季度資料: {}/{}/", importDir, year);
             return;
         }
-        log.info("找到 {} 個 .xlsx 檔案", xlsxFiles.size());
+
+        List<File> allFiles = new ArrayList<>();
+        quarterFiles.values().forEach(allFiles::addAll);
+        log.info("找到 {} 個 .xlsx 檔案，涵蓋 {} 個季度", allFiles.size(), quarterFiles.size());
 
         // STEP 2: Parse all filenames
         log.info("解析檔名...");
         List<FileInfo> fileInfos = new ArrayList<>();
-        for (File f : xlsxFiles) {
+        for (File f : allFiles) {
             Optional<FileInfo> parsed = filenameParser.parse(f.getAbsolutePath());
             if (parsed.isPresent()) {
                 fileInfos.add(parsed.get());
@@ -100,7 +104,7 @@ public class ReportGenerationService implements CommandLineRunner {
         Map<String, CompanyData> companyDataMap = new LinkedHashMap<>();
         boolean hasReadError = false;
         for (FileInfo fi : fileInfos) {
-            File sourceFile = xlsxFiles.stream()
+            File sourceFile = allFiles.stream()
                 .filter(f -> f.getName().equals(fi.filename()))
                 .findFirst().orElse(null);
             if (sourceFile == null) {
@@ -138,21 +142,23 @@ public class ReportGenerationService implements CommandLineRunner {
         log.info("按季度分組...");
         Map<Integer, QuarterData> quarterDataMap = dataTransformer.groupByQuarter(fileInfos, companyDataMap);
         int maxQuarter = quarterDataMap.keySet().stream().mapToInt(Integer::intValue).max().orElse(1);
-        int year = fileInfos.get(0).year();
         log.info("年度={}, 最大季度=Q{}, 涵蓋季度={}", year, maxQuarter, quarterDataMap.keySet());
 
-        // STEP 7: Read last year data
+        // STEP 7: 讀取去年同期資料 (from output/{year-1}Q{quarter}/)
         log.info("讀取去年同期資料...");
-        Map<String, Double> lastYearData = lastYearReader.readLastYearData(year, maxQuarter, lastYearDir);
+        String lastYearOutputDir = Paths.get(outputDir, (year - 1) + "Q" + maxQuarter).toString();
+        Map<String, Double> lastYearData = lastYearReader.readLastYearData(year, maxQuarter, lastYearOutputDir);
         if (lastYearData.isEmpty()) {
             log.warn("無去年同期資料，U欄將留空");
         } else {
             log.info("已讀取去年資料，共 {} 家公司", lastYearData.size());
         }
 
-        // STEP 8: Generate output filename and path
+        // STEP 8: Generate output path: output/{year}Q{quarter}/
+        String yearQuarterDir = year + "Q" + maxQuarter;
+        Path outputSubDir = Paths.get(outputDir, yearQuarterDir);
         String outputFilename = String.format("%d年產險業務(Q%d季自留)保費統計表.xlsx", year, maxQuarter);
-        Path outputPath = Paths.get(outputDir, outputFilename);
+        Path outputPath = outputSubDir.resolve(outputFilename);
 
         // STEP 9: Write report
         log.info("寫入報表: {}", outputPath);
@@ -170,12 +176,29 @@ public class ReportGenerationService implements CommandLineRunner {
         log.info("===== 處理完成 =====");
     }
 
-    private List<File> scanImportFiles(String importDir) {
-        File dir = new File(importDir);
-        if (!dir.exists() || !dir.isDirectory()) {
-            return Collections.emptyList();
+    /**
+     * 掃描 import/{year}/Q1/ ~ Q4/ 目錄中的 .xlsx 檔案
+     */
+    private Map<Integer, List<File>> scanQuarterFiles(String importDir, int year) {
+        Map<Integer, List<File>> result = new TreeMap<>();
+        Path yearDir = Paths.get(importDir, String.valueOf(year));
+
+        if (!Files.exists(yearDir) || !Files.isDirectory(yearDir)) {
+            log.warn("年度目錄不存在: {}", yearDir);
+            return result;
         }
-        File[] files = dir.listFiles((d, name) -> name.endsWith(".xlsx"));
-        return files != null ? Arrays.asList(files) : Collections.emptyList();
+
+        for (int q = 1; q <= 4; q++) {
+            Path quarterDir = yearDir.resolve("Q" + q);
+            if (Files.exists(quarterDir) && Files.isDirectory(quarterDir)) {
+                File[] files = quarterDir.toFile().listFiles((d, name) -> name.endsWith(".xlsx"));
+                if (files != null && files.length > 0) {
+                    result.put(q, Arrays.asList(files));
+                    log.info("  Q{}: {} 個檔案", q, files.length);
+                }
+            }
+        }
+
+        return result;
     }
 }
