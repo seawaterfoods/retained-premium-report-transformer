@@ -7,9 +7,9 @@
 ### Q: 程式執行後沒有產出檔案？
 
 檢查 log 輸出。常見原因：
-1. `input/` 目錄中沒有 `.xlsx` 檔案
+1. `import/` 目錄中沒有 `.xlsx` 檔案
 2. 檔名格式不符規定
-3. `templates/template.xlsx` 不存在
+3. `import/template.xlsx` 不存在
 4. 來源資料有誤導致中止
 
 ### Q: 輸出報表的公式沒有計算結果？
@@ -32,14 +32,9 @@ docker-compose logs -f report-transformer
 
 ### Q: 如何修改日誌等級？
 
-方式一：修改 `application.yml`
-```yaml
-logging:
-  level:
-    com.example.retainedpremium: DEBUG
-```
+方式一：修改 `config/application.yml` 中的 logging 設定
 
 方式二：透過環境變數
 ```bash
-LOGGING_LEVEL_COM_EXAMPLE_RETAINEDPREMIUM=DEBUG
+LOGGING_LEVEL_COM_INSURANCE_RETAINEDPREMIUM=DEBUG
 ```

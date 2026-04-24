@@ -2,12 +2,11 @@ services:
   report-transformer:
     build: .
     volumes:
-      - ./input:/data/input
+      - ./import:/data/import
       - ./output:/data/output
-      - ./templates:/data/templates
-      - ./lastyear:/data/lastyear
+      - ./config:/app/config
     environment:
-      - APP_INPUT_DIR=/data/input
+      - APP_IMPORT_DIR=/data/import
       - APP_OUTPUT_DIR=/data/output
-      - APP_TEMPLATE_PATH=/data/templates/template.xlsx
-      - APP_LAST_YEAR_DIR=/data/lastyear
+      - APP_TEMPLATE_PATH=/data/import/template.xlsx
+      - APP_LAST_YEAR_DIR=/data/import/lastyear

@@ -1,11 +1,10 @@
-FROM gradle:8.12-jdk17 AS build
+FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
-COPY build.gradle.kts settings.gradle.kts ./
-COPY gradle ./gradle
+COPY pom.xml ./
 COPY src ./src
-RUN gradle bootJar --no-daemon
+RUN mvn clean package -DskipTests -q
 
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-COPY --from=build /app/build/libs/*.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,19 +1,38 @@
-# Gradle
-.gradle/
-build/
-!gradle/wrapper/gradle-wrapper.jar
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
 
-# IDE
-.idea/
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
 *.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
 .vscode/
-*.swp
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Application
-input/
-output/
-lastyear/
+### Project specific ###
+/import/
+/output/
+*.log

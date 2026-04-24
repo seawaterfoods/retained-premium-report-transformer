@@ -1,7 +1,7 @@
 # 自留保費統計表報表轉換系統 — 文件索引
 
-> **版本**：1.0.0  
-> **技術棧**：Java 17 / Spring Boot 3.4.1 / Apache POI 5.3.0 / Gradle 8.12
+> **版本**：2.0.0  
+> **技術棧**：Java 17 / Spring Boot 3.5.0 / Apache POI 5.3.0 / Maven
 
 ## 文件清單
 

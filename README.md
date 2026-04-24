@@ -2,7 +2,7 @@
 
 > 將多個產險公司的「自留保費統計表」Excel 來源檔，自動彙整填入輸出模板，產生季度報表。
 
-**Java 17** · **Spring Boot 3.4.1** · **Apache POI 5.3.0** · **Gradle 8.12** · **Docker**
+**Java 17** · **Spring Boot 3.5.0** · **Apache POI 5.3.0** · **Maven** · **Docker**
 
 ## 📖 文件
 
@@ -11,17 +11,17 @@
 ## 🚀 快速開始
 
 ```bash
-# 1. 建立目錄結構
-mkdir input output templates lastyear
+# 1. 編譯
+build.bat
 
-# 2. 放入模板
-cp docs/115年產險業務(Q1季自留)保費統計表.xlsx templates/template.xlsx
+# 2. 準備資料：將來源 Excel 放入 import/
+#    將模板檔放到 import/template.xlsx
+#    將去年報表放到 import/lastyear/
 
-# 3. 放入來源檔案
-cp docs/29_115(01-03)_自留保費統計表.xlsx input/
+# 3. 設定：編輯 config/application.yml
 
 # 4. 執行
-.\gradlew.bat bootRun
+run.bat
 
 # 5. 查看輸出
 ls output/
@@ -32,6 +32,26 @@ ls output/
 ```bash
 docker-compose build
 docker-compose up
+```
+
+## 專案結構
+
+```
+├── config/          外部設定檔 (使用者可修改)
+├── import/          來源資料 (使用者放入)
+├── output/          產出報表
+├── src/main/java/com/insurance/retainedpremium/
+│   ├── config/      配置
+│   ├── model/       資料模型
+│   ├── reader/      Excel 讀取與驗證
+│   ├── writer/      Excel 寫入
+│   ├── service/     業務邏輯編排
+│   ├── constant/    常數定義
+│   └── exception/   例外處理
+├── docs/            完整文件
+├── build.bat        編譯腳本
+├── run.bat          執行腳本
+└── pom.xml          Maven 建置設定
 ```
 
 ## 功能摘要
