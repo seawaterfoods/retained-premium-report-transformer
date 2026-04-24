@@ -19,12 +19,15 @@ public class DataTransformerService {
 
     private static final Logger log = LoggerFactory.getLogger(DataTransformerService.class);
 
+    /**
+     * companyDataMap key = filename (支援同一公司跨季度)
+     */
     public Map<Integer, QuarterData> groupByQuarter(List<FileInfo> fileInfos, Map<String, CompanyData> companyDataMap) {
         Map<Integer, Map<String, CompanyData>> quarterCompanies = new HashMap<>();
         Map<Integer, FileInfo> quarterRepresentative = new HashMap<>();
 
         for (FileInfo fileInfo : fileInfos) {
-            CompanyData companyData = companyDataMap.get(fileInfo.companyCode());
+            CompanyData companyData = companyDataMap.get(fileInfo.filename());
             if (companyData == null) {
                 log.warn("No company data found for companyCode={}, skipping file: {}", fileInfo.companyCode(), fileInfo.filename());
                 continue;
