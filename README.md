@@ -1,6 +1,6 @@
 # 自留保費統計表報表轉換系統
 
-> 將多個產險公司的「自留保費統計表」Excel 來源檔，自動彙整填入輸出模板，產生季度報表。
+> 將多個產險公司的「自留保費統計表」Excel 來源檔，自動彙整產生報表。
 
 **Java 17** · **Spring Boot 3.5.0** · **Apache POI 5.3.0** · **Maven** · **Docker**
 
@@ -15,7 +15,6 @@
 build.bat
 
 # 2. 準備資料：將來源 Excel 放入 import/
-#    將模板檔放到 import/template.xlsx
 #    將去年報表放到 import/lastyear/
 
 # 3. 設定：編輯 config/application.yml
