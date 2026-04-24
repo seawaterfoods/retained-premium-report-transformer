@@ -1,7 +1,6 @@
 app:
   import-dir: ./import
   output-dir: ./output
-  template-path: ./import/template.xlsx
   last-year-dir: ./import/lastyear
 
 spring:

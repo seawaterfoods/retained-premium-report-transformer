@@ -6,14 +6,13 @@ import com.insurance.retainedpremium.reader.ExcelSourceReader;
 import com.insurance.retainedpremium.reader.FileValidator;
 import com.insurance.retainedpremium.reader.FilenameParser;
 import com.insurance.retainedpremium.reader.LastYearReader;
-import com.insurance.retainedpremium.writer.TemplateWriter;
+import com.insurance.retainedpremium.writer.ReportWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -26,7 +25,7 @@ public class ReportGenerationService implements CommandLineRunner {
     private final FilenameParser filenameParser;
     private final ExcelSourceReader excelReader;
     private final DataTransformerService dataTransformer;
-    private final TemplateWriter templateWriter;
+    private final ReportWriter reportWriter;
     private final LastYearReader lastYearReader;
     private final FileValidator validator;
 
@@ -34,14 +33,14 @@ public class ReportGenerationService implements CommandLineRunner {
                                    FilenameParser filenameParser,
                                    ExcelSourceReader excelReader,
                                    DataTransformerService dataTransformer,
-                                   TemplateWriter templateWriter,
+                                   ReportWriter reportWriter,
                                    LastYearReader lastYearReader,
                                    FileValidator validator) {
         this.appConfig = appConfig;
         this.filenameParser = filenameParser;
         this.excelReader = excelReader;
         this.dataTransformer = dataTransformer;
-        this.templateWriter = templateWriter;
+        this.reportWriter = reportWriter;
         this.lastYearReader = lastYearReader;
         this.validator = validator;
     }
@@ -50,7 +49,6 @@ public class ReportGenerationService implements CommandLineRunner {
     public void run(String... args) throws Exception {
         log.info("===== 自留保費統計表報表轉換系統 =====");
         log.info("匯入目錄: {}", appConfig.getImportDir());
-        log.info("模板路徑: {}", appConfig.getTemplatePath());
         log.info("輸出目錄: {}", appConfig.getOutputDir());
         log.info("去年目錄: {}", appConfig.getLastYearDir());
 
@@ -59,7 +57,6 @@ public class ReportGenerationService implements CommandLineRunner {
 
     public void execute() {
         String importDir = appConfig.getImportDir();
-        String templatePath = appConfig.getTemplatePath();
         String outputDir = appConfig.getOutputDir();
         String lastYearDir = appConfig.getLastYearDir();
 
@@ -153,28 +150,15 @@ public class ReportGenerationService implements CommandLineRunner {
             log.info("已讀取去年資料，共 {} 家公司", lastYearData.size());
         }
 
-        // STEP 8: Verify template exists
-        if (!new File(templatePath).exists()) {
-            log.error("模板檔案不存在: {}", templatePath);
-            return;
-        }
-
-        // STEP 9: Generate output filename and path
+        // STEP 8: Generate output filename and path
         String outputFilename = String.format("%d年產險業務(Q%d季自留)保費統計表.xlsx", year, maxQuarter);
         Path outputPath = Paths.get(outputDir, outputFilename);
 
-        try {
-            Files.createDirectories(Paths.get(outputDir));
-        } catch (Exception e) {
-            log.error("無法建立輸出目錄: {}", outputDir, e);
-            return;
-        }
-
-        // STEP 10: Write report
+        // STEP 9: Write report
         log.info("寫入報表: {}", outputPath);
         try {
-            templateWriter.writeReport(
-                templatePath, outputPath.toString(),
+            reportWriter.writeReport(
+                outputPath.toString(),
                 quarterDataMap, lastYearData, year, maxQuarter
             );
             log.info("報表產出完成: {}", outputPath);

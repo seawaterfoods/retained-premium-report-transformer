@@ -1,6 +1,5 @@
 package com.insurance.retainedpremium.reader;
 
-import com.insurance.retainedpremium.constant.InsuranceConstants;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
@@ -14,13 +13,16 @@ import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static com.insurance.retainedpremium.constant.InsuranceConstants.S2_COL_YEAR_TOTAL;
+
 @Component
 public class LastYearReader {
 
     private static final Logger log = LoggerFactory.getLogger(LastYearReader.class);
 
     /**
-     * Reads last year's output report to get "去年同期" data for the U column in Sheet2.
+     * 讀取去年同期報表的 Sheet2 T 欄 (年度合計)。
+     * 動態掃描所有列，以 A 欄公司代號 (純數字) 識別資料列。
      */
     public Map<String, Double> readLastYearData(int currentYear, int quarter, String lastYearDir) {
         String filename = (currentYear - 1) + "年產險業務(Q" + quarter + "季自留)保費統計表.xlsx";
@@ -39,22 +41,20 @@ public class LastYearReader {
             Sheet sheet = workbook.getSheetAt(1);
             FormulaEvaluator evaluator = workbook.getCreationHelper().createFormulaEvaluator();
 
-            int[] block = InsuranceConstants.S2_QUARTER_BLOCKS.get(quarter);
-            int dataStart = block[0];
-            int dataEnd = block[1];
+            int tColIndex = S2_COL_YEAR_TOTAL - 1;
 
-            int tColIndex = InsuranceConstants.TEMPLATE_S2_YEAR_TOTAL_COL - 1;
-
-            for (int rowNum = dataStart; rowNum <= dataEnd; rowNum++) {
-                Row row = sheet.getRow(rowNum - 1);
+            for (int rowNum = 0; rowNum <= sheet.getLastRowNum(); rowNum++) {
+                Row row = sheet.getRow(rowNum);
                 if (row == null) continue;
 
                 String companyCode = getCompanyCode(row.getCell(0));
                 if (companyCode == null || companyCode.isBlank()) continue;
+                if (!companyCode.matches("\\d+")) continue;
 
                 Cell valueCell = row.getCell(tColIndex);
                 double value = evaluateNumericCell(valueCell, evaluator);
 
+                // 取最後一個季度區塊的值 (覆寫先前的)
                 result.put(companyCode, value);
             }
 

@@ -3,8 +3,5 @@ app:
   import-dir: ./import
   output-dir: ./output
 
-  # 模板路徑
-  template-path: ./import/template.xlsx
-
   # 去年報表目錄
   last-year-dir: ./import/lastyear
