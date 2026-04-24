@@ -283,6 +283,13 @@ public class ReportWriter {
         }
         createCell(groupRow, mapping.getS2ColGrowth() - 1, "比較", styles.getS2GroupHeaderStyle());
 
+        // 填滿 Row3 空白儲存格 (未分組的分類欄位) 以統一底色
+        for (int c = 0; c < mapping.getS2ColGrowth(); c++) {
+            if (groupRow.getCell(c) == null) {
+                createCell(groupRow, c, "", styles.getS2GroupHeaderStyle());
+            }
+        }
+
         // --- Row 3: Main headers ---
         Row mainRow = sheet.createRow(S2_HEADER_ROW_MAIN);
         mainRow.setHeightInPoints(ExcelStyleHelper.S2_ROW3_HEIGHT);
